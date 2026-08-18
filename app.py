@@ -231,13 +231,12 @@ if uploaded_image is not None:
 
         if os.path.exists("alert.mp3"):
             with open("alert.mp3", "rb") as audio_file:
-            audio_bytes = audio_file.read()
-
-            st.audio(
-                audio_bytes,
-                format="audio/mp3",
-                autoplay=True
-            )
+                audio_bytes = audio_file.read()
+                st.audio(
+                    audio_bytes,
+                    format="audio/mp3",
+                    autoplay=True
+                )
 
         else:
 
