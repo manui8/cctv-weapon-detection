@@ -234,9 +234,10 @@ if uploaded_image is not None:
                 audio_bytes = audio_file.read()
                 st.audio(
                     audio_bytes,
-                    format="audio/mp3",
-                    autoplay=True
+                    format="audio/mp3"
                 )
+
+                st.warning("🔊 Click the Play button above to hear the alert sound.")
 
         else:
 
