@@ -144,6 +144,112 @@ st.sidebar.write("🎯 Detection: Weapon")
 st.sidebar.write("📹 Input: CCTV Video")
 
 # =========================================================
+# IMAGE UPLOAD
+# =========================================================
+
+st.subheader("🖼️ Upload Image")
+
+uploaded_image = st.file_uploader(
+    "Choose an image",
+    type=["jpg", "jpeg", "png"],
+    key="image_uploader"
+)
+
+if uploaded_image is not None:
+
+    st.success("✅ Image uploaded successfully!")
+
+    # Read image
+    from PIL import Image
+
+    image = Image.open(uploaded_image)
+
+    # Display original image
+    st.image(
+        image,
+        caption="Uploaded Image",
+        use_container_width=True
+    )
+
+    # Detection button
+    if st.button(
+        "🔍 Detect Weapon in Image",
+        use_container_width=True
+    ):
+
+        results = model(
+            image,
+            conf=confidence_threshold,
+            verbose=False
+        )
+
+        weapon_detected = False
+        detected_confidence = 0
+
+        # ---------------------------------------------
+        # CHECK DETECTIONS
+        # ---------------------------------------------
+
+        for result in results:
+
+            if result.boxes is None:
+                continue
+
+            for box in result.boxes:
+
+                confidence = float(
+                    box.conf[0]
+                )
+
+                class_id = int(
+                    box.cls[0]
+                )
+
+                class_name = model.names[
+                    class_id
+                ]
+
+                if (
+                    class_name.lower() == "weapon"
+                    and confidence >= confidence_threshold
+                ):
+
+                    weapon_detected = True
+
+                    detected_confidence = confidence
+
+        # ---------------------------------------------
+        # DISPLAY RESULT
+        # ---------------------------------------------
+
+        if weapon_detected:
+
+            st.error(
+                f"🚨 WEAPON DETECTED! "
+                f"Confidence: {detected_confidence:.2f}"
+            )
+
+        else:
+
+            st.success(
+                "✅ NO WEAPON DETECTED"
+            )
+
+        # ---------------------------------------------
+        # DISPLAY DETECTED IMAGE
+        # ---------------------------------------------
+
+        for result in results:
+
+            annotated_image = result.plot()
+
+            st.image(
+                annotated_image,
+                caption="Weapon Detection Result",
+                use_container_width=True
+            )
+
+# =========================================================
 # VIDEO UPLOAD
 # =========================================================
 
