@@ -370,7 +370,10 @@ def convert_video_for_browser(input_path):
             timeout=300
         )
 
-        if result.returncode == 0 and os.path.exists(output_path):
+        if (
+            result.returncode == 0
+            and os.path.exists(output_path)
+        ):
 
             return output_path
 
@@ -392,8 +395,9 @@ def home_page():
 
     with st.sidebar:
 
-        st.title("Artificial Intelligence Career for Women (AICW)")
-        
+        st.title(
+            "Artificial Intelligence Career for Women (AICW)"
+        )
 
         st.divider()
 
@@ -436,7 +440,6 @@ def home_page():
 
     st.write("")
 
-    # Description heading
     st.markdown(
         "<h2 style='text-align:center;'>Description</h2>",
         unsafe_allow_html=True
@@ -444,7 +447,6 @@ def home_page():
 
     st.write("")
 
-    # Description matter
     st.markdown(
         """
         <div style="
@@ -472,7 +474,7 @@ def home_page():
     st.write("")
     st.write("")
 
-# =====================================================
+    # =====================================================
     # NEXT BUTTON
     # =====================================================
 
@@ -485,6 +487,7 @@ def home_page():
         st.session_state.page = "detection"
 
         st.rerun()
+
 
 # =========================================================
 # DETECTION PAGE
@@ -506,8 +509,6 @@ def detection_page():
             """,
             unsafe_allow_html=True
         )
-
-        # Back button
 
         if st.button(
             "⬅️ Back",
@@ -1308,78 +1309,72 @@ def detection_page():
                     "📊 Detection Results"
                 )
 
-                st.subheader("📊 Detection Results")
+                col1, col2, col3 = st.columns(3)
 
-col1, col2, col3 = st.columns(3)
+                with col1:
 
-with col1:
-    st.metric(
-        label="🎞️ Frames",
-        value=total_frames
-    )
+                    st.metric(
+                        label="🎞️ Frames",
+                        value=total_frames
+                    )
 
-with col2:
-    st.metric(
-        label="🚨 Detections",
-        value=confirmed_detections
-    )
+                with col2:
 
-with col3:
+                    st.metric(
+                        label="🚨 Detections",
+                        value=confirmed_detections
+                    )
 
-    if confirmed_detections > 0:
+                with col3:
 
-        st.error("🚨 WEAPON DETECTED")
+                    if confirmed_detections > 0:
 
-        alert_path = "alert.mp3"
+                        st.error(
+                            "🚨 WEAPON DETECTED"
+                        )
 
-        if os.path.exists(alert_path):
+                    else:
 
-            with open(alert_path, "rb") as audio_file:
-
-                st.audio(
-                    audio_file.read(),
-                    format="audio/mp3"
-                )
-
-    else:
-
-        st.success("✅ NO WEAPON DETECTED")
+                        st.success(
+                            "✅ NO WEAPON DETECTED"
+                        )
 
                 # -----------------------------------------
                 # SIREN ONLY WHEN WEAPON DETECTED
                 # -----------------------------------------
-        if confirmed_detections > 0:
 
-                st.markdown(
-                    "### 🔊 Weapon Detection Alert"
-                )
+                if confirmed_detections > 0:
 
-                play_alert()
+                    st.markdown(
+                        "### 🔊 Weapon Detection Alert"
+                    )
+
+                    play_alert()
 
                 # -----------------------------------------
                 # DETECTION EVENTS
                 # -----------------------------------------
 
-        if detection_events:
+                if detection_events:
 
-                st.markdown("---")
+                    st.markdown("---")
 
-                st.subheader(
-                    "🚨 Detection Events"
-                )
+                    st.subheader(
+                        "🚨 Detection Events"
+                    )
 
                     # Show unique/limited events
 
-                displayed_events = detection_events[:50]
+                    displayed_events = detection_events[:50]
 
-                for event in displayed_events:
+                    for event in displayed_events:
 
-                    st.warning(
-                        f"⏱️ Time: "
-                        f"{event['time']} sec  |  "
-                        f"Confidence: "
-                        f"{event['confidence']}"
-                    )
+                        st.warning(
+                            f"⏱️ Time: "
+                            f"{event['time']} sec  |  "
+                            f"Confidence: "
+                            f"{event['confidence']}"
+                        )
 
                 # -----------------------------------------
                 # INPUT / OUTPUT VIDEO SIDE BY SIDE
@@ -1462,6 +1457,7 @@ with col3:
                     if os.path.exists(
                         input_video_path
                     ):
+
                         os.remove(
                             input_video_path
                         )
