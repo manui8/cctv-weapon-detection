@@ -52,7 +52,30 @@ if "page" not in st.session_state:
 # CUSTOM CSS
 # =========================================================
 
-st.markdown("""
+st.markdown(
+    """
+    <div class="description-heading">
+        Description
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+st.markdown(
+    """
+    <div class="description-text">
+        The AI Based Weapon Detection in CCTV system is designed
+        to automatically identify weapons from CCTV images and
+        video footage using Artificial Intelligence and YOLO-based
+        object detection. The system analyzes uploaded media,
+        detects suspicious weapons, highlights the detected objects,
+        and provides an alert when a weapon is identified. This
+        solution helps improve security and enables faster response
+        to potentially dangerous situations.
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 <style>
 
 /* =====================================================
