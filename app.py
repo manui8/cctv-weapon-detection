@@ -1308,61 +1308,42 @@ def detection_page():
                     "📊 Detection Results"
                 )
 
-                col1, col2, col3 = st.columns(3)
+                st.subheader("📊 Detection Results")
 
-                with col1:
+col1, col2, col3 = st.columns(3)
 
-                    st.markdown(
-                        f"""
-                        <div class="info-card">
+with col1:
+    st.metric(
+        label="🎞️ Frames",
+        value=total_frames
+    )
 
-                            <h3>🎞️ Frames</h3>
+with col2:
+    st.metric(
+        label="🚨 Detections",
+        value=confirmed_detections
+    )
 
-                            <h2>{total_frames}</h2>
+with col3:
 
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
+    if confirmed_detections > 0:
 
-                with col2:
+        st.error("🚨 WEAPON DETECTED")
 
-                    st.markdown(
-                        f"""
-                        <div class="info-card">
+        alert_path = "alert.mp3"
 
-                            <h3>🚨 Detections</h3>
+        if os.path.exists(alert_path):
 
-                            <h2>{confirmed_detections}</h2>
+            with open(alert_path, "rb") as audio_file:
 
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
+                st.audio(
+                    audio_file.read(),
+                    format="audio/mp3"
+                )
 
-                with col3:
+    else:
 
-                    if confirmed_detections > 0:
-
-                        st.markdown(
-                            """
-                            <div class="detection-box danger">
-                                🚨 WEAPON DETECTED
-                            </div>
-                            """,
-                            unsafe_allow_html=True
-                        )
-
-                    else:
-
-                        st.markdown(
-                            """
-                            <div class="detection-box safe">
-                                ✅ NO WEAPON DETECTED
-                            </div>
-                            """,
-                            unsafe_allow_html=True
-                        )
+        st.success("✅ NO WEAPON DETECTED")
 
                 # -----------------------------------------
                 # SIREN ONLY WHEN WEAPON DETECTED
