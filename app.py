@@ -3,14 +3,10 @@ import cv2
 import os
 import math
 import tempfile
-import subprocess
-import shutil
-import json
-from datetime import datetime
-
 import numpy as np
-from PIL import Image
+
 from ultralytics import YOLO
+from PIL import Image
 
 
 # =========================================================
@@ -37,10 +33,12 @@ REQUIRED_CONSECUTIVE_FRAMES = 5
 TEAM_LEAD = "S Nagasindhu"
 
 TEAM_MEMBERS = [
-    "S Bhavyasri",
+    "S Bhavya Sri",
     "S Manasa",
     "S Anusha"
 ]
+
+ALERT_FILE = "alert.mp3"
 
 
 # =========================================================
@@ -51,115 +49,109 @@ st.markdown(
     """
     <style>
 
-    /* ================================
-       GENERAL
-       ================================ */
-
-    .main {
+    .stApp {
         background-color: #0e1117;
     }
 
-    .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-    }
-
-
-    /* ================================
-       SIDEBAR
-       ================================ */
-
-    .sidebar-title {
-        font-size: 22px;
-        font-weight: bold;
+    .main-title {
         text-align: center;
-        padding: 10px;
-    }
-
-    .sidebar-heading {
-        font-size: 18px;
-        font-weight: bold;
-    }
-
-
-    /* ================================
-       HOME PAGE
-       ================================ */
-
-    .home-title {
-        font-size: 46px;
+        font-size: 42px;
         font-weight: 800;
-        text-align: center;
-        color: white;
         margin-top: 20px;
-        margin-bottom: 35px;
+        margin-bottom: 10px;
     }
 
-    .project-main-title {
+    .college-title {
+        text-align: center;
+        font-size: 26px;
+        font-weight: 600;
+        color: #4da6ff;
+        margin-bottom: 30px;
+    }
+
+    .guide-card {
+        background-color: #1b1f2a;
+        padding: 20px;
+        border-radius: 14px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .guide-label {
+        color: #aaaaaa;
+        font-size: 18px;
+    }
+
+    .guide-name {
+        color: white;
+        font-size: 25px;
+        font-weight: bold;
+    }
+
+    .team-card {
+        background-color: #1b1f2a;
+        padding: 22px;
+        border-radius: 14px;
+        margin-bottom: 25px;
+    }
+
+    .team-heading {
+        text-align: center;
+        font-size: 25px;
+        font-weight: bold;
+        margin-bottom: 18px;
+    }
+
+    .team-lead {
+        text-align: center;
+        color: #50fa7b;
+        font-size: 20px;
+        font-weight: bold;
+        margin-bottom: 12px;
+    }
+
+    .team-member {
+        text-align: center;
+        color: #dddddd;
+        font-size: 18px;
+        margin: 7px;
+    }
+
+    .project-heading {
+        text-align: center;
         font-size: 40px;
         font-weight: 800;
-        text-align: center;
-        color: white;
-        margin-top: 20px;
-        margin-bottom: 35px;
-    }
-
-    .description-box {
-        background-color: #191d27;
-        border: 1px solid #303644;
-        border-radius: 16px;
-        padding: 30px 38px;
-        margin: 0 auto 30px auto;
-        max-width: 950px;
+        margin-top: 25px;
+        margin-bottom: 25px;
     }
 
     .description-heading {
         text-align: center;
         font-size: 28px;
-        font-weight: 700;
-        color: white;
-        margin-bottom: 18px;
+        font-weight: bold;
+        margin-top: 15px;
+        margin-bottom: 12px;
     }
 
     .description-text {
         text-align: center;
         font-size: 18px;
-        line-height: 1.8;
+        line-height: 1.7;
         color: #dddddd;
-    }
-
-
-    /* ================================
-       DETECTION PAGE
-       ================================ */
-
-    .detection-title {
-        font-size: 42px;
-        font-weight: 800;
-        text-align: center;
-        color: white;
-        margin-bottom: 8px;
-    }
-
-    .detection-subtitle {
-        text-align: center;
-        color: #aaaaaa;
-        font-size: 18px;
+        max-width: 900px;
+        margin-left: auto;
+        margin-right: auto;
         margin-bottom: 30px;
     }
 
     .detection-box {
-        padding: 20px;
+        padding: 18px;
         border-radius: 12px;
         text-align: center;
-        font-size: 24px;
+        font-size: 23px;
         font-weight: bold;
         margin-top: 15px;
-    }
-
-    .safe {
-        background-color: #123d24;
-        color: #50fa7b;
+        margin-bottom: 15px;
     }
 
     .danger {
@@ -167,18 +159,23 @@ st.markdown(
         color: #ff5555;
     }
 
-    .info-card {
-        background-color: #1b1f2a;
-        padding: 18px;
-        border-radius: 12px;
-        text-align: center;
+    .safe {
+        background-color: #123d24;
+        color: #50fa7b;
     }
 
     .video-heading {
-        font-size: 22px;
-        font-weight: bold;
         text-align: center;
-        margin-bottom: 12px;
+        font-size: 23px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .sidebar-heading {
+        text-align: center;
+        font-size: 21px;
+        font-weight: bold;
+        padding: 8px;
     }
 
     </style>
@@ -196,7 +193,7 @@ if "page" not in st.session_state:
 
 
 # =========================================================
-# MODEL
+# LOAD MODEL
 # =========================================================
 
 @st.cache_resource
@@ -205,42 +202,10 @@ def load_model():
 
 
 # =========================================================
-# HELPER - WEAPON CLASS CHECK
-# =========================================================
-
-def is_weapon_class(class_name):
-    """
-    Supports common class names used in weapon datasets.
-    """
-
-    name = str(class_name).lower().strip()
-
-    weapon_keywords = [
-        "weapon",
-        "gun",
-        "pistol",
-        "rifle",
-        "firearm",
-        "knife",
-        "sword",
-        "shotgun",
-        "handgun",
-        "revolver"
-    ]
-
-    for keyword in weapon_keywords:
-        if keyword in name:
-            return True
-
-    return False
-
-
-# =========================================================
-# HELPER - BOX CENTER
+# HELPER FUNCTIONS
 # =========================================================
 
 def box_center(box):
-
     x1, y1, x2, y2 = box
 
     return (
@@ -248,10 +213,6 @@ def box_center(box):
         (y1 + y2) / 2
     )
 
-
-# =========================================================
-# HELPER - DISTANCE
-# =========================================================
 
 def distance(box1, box2):
 
@@ -264,77 +225,25 @@ def distance(box1, box2):
     )
 
 
-# =========================================================
-# SAVE DETECTION DATA
-# =========================================================
+def play_alert():
 
-def save_detection_data(
-    detection_type,
-    weapon_count,
-    total_objects=0
-):
+    if os.path.exists(ALERT_FILE):
 
-    data_file = "detection_log.json"
+        with open(ALERT_FILE, "rb") as audio_file:
 
-    detection_record = {
-        "timestamp": datetime.now().isoformat(),
-        "type": detection_type,
-        "weapons_detected": weapon_count,
-        "total_objects": total_objects
-    }
+            audio_bytes = audio_file.read()
 
-    try:
-
-        if os.path.exists(data_file):
-
-            with open(data_file, "r") as f:
-                data = json.load(f)
-
-        else:
-
-            data = {
-                "detections": []
-            }
-
-        data["detections"].append(
-            detection_record
+        st.audio(
+            audio_bytes,
+            format="audio/mp3",
+            autoplay=True
         )
 
-        if len(data["detections"]) > 100:
+    else:
 
-            data["detections"] = (
-                data["detections"][-100:]
-            )
-
-        with open(data_file, "w") as f:
-
-            json.dump(
-                data,
-                f,
-                indent=2
-            )
-
-    except Exception:
-        pass
-
-
-# =========================================================
-# ALERT SOUND
-# =========================================================
-
-def show_alert_sound():
-
-    alert_path = "alert.mp3"
-
-    if os.path.exists(alert_path):
-
-        with open(alert_path, "rb") as audio_file:
-
-            st.audio(
-                audio_file.read(),
-                format="audio/mp3",
-                autoplay=False
-            )
+        st.warning(
+            "⚠️ alert.mp3 file not found."
+        )
 
 
 # =========================================================
@@ -343,27 +252,22 @@ def show_alert_sound():
 
 def home_page():
 
-    # =====================================================
+    # -----------------------------------------------------
     # SIDEBAR
-    # =====================================================
+    # -----------------------------------------------------
 
     with st.sidebar:
 
         st.markdown(
-            """
-            <div class="sidebar-title">
-                Artificial Intelligence<br>
-                Career for Women (AICW)
-            </div>
-            """,
+            '<div class="sidebar-heading">'
+            'Artificial Intelligence Career for Women (AICW)'
+            '</div>',
             unsafe_allow_html=True
         )
 
         st.markdown("---")
 
-        st.markdown(
-            "### 🎓 College"
-        )
+        st.markdown("### 🎓 Institution")
 
         st.write(
             "VSM College of Engineering"
@@ -371,9 +275,7 @@ def home_page():
 
         st.markdown("---")
 
-        st.markdown(
-            "### 👨‍🏫 Project Guide"
-        )
+        st.markdown("### 👨‍🏫 Project Guide")
 
         st.write(
             "Mr. Abdul Aziz MD"
@@ -381,67 +283,111 @@ def home_page():
 
         st.markdown("---")
 
-        st.markdown(
-            "### 👥 Team Members"
+        st.markdown("### 👥 Team Members")
+
+        st.write(
+            "⭐ **S Nagasindhu — Team Lead**"
         )
 
         st.write(
-            f"⭐ **{TEAM_LEAD} — Team Lead**"
+            "• S Bhavya Sri — Team Member"
         )
 
-        for member in TEAM_MEMBERS:
+        st.write(
+            "• S Manasa — Team Member"
+        )
 
-            st.write(
-                f"• {member} — Team Member"
-            )
+        st.write(
+            "• S Anusha — Team Member"
+        )
 
-    # =====================================================
-    # MAIN TITLE
-    # =====================================================
+    # -----------------------------------------------------
+    # MAIN WELCOME CONTENT
+    # -----------------------------------------------------
 
     st.markdown(
-        """
-        <div class="project-main-title">
-            🚨 WeaponGuard AI
-        </div>
-        """,
+        '<div class="main-title">'
+        'Artificial Intelligence Career for Women (AICW)'
+        '</div>',
         unsafe_allow_html=True
     )
 
-    # =====================================================
-    # DESCRIPTION
-    # =====================================================
-
     st.markdown(
-        """
-        <div class="description-box">
-
-            <div class="description-heading">
-                Description
-            </div>
-
-            <div class="description-text">
-                WeaponGuard AI is an intelligent CCTV security
-                system designed to automatically detect weapons
-                from images and video footage. Using Artificial
-                Intelligence and YOLO-based object detection,
-                the system analyzes visual data, identifies
-                suspicious weapons, highlights detected objects
-                with bounding boxes, and provides an alert when
-                a weapon is found. The system helps improve
-                surveillance, supports faster security response,
-                and provides an efficient approach for detecting
-                potential threats in CCTV environments.
-            </div>
-
-        </div>
-        """,
+        '<div class="college-title">'
+        'VSM College of Engineering'
+        '</div>',
         unsafe_allow_html=True
     )
 
-    # =====================================================
-    # NEXT BUTTON
-    # =====================================================
+    # Guide
+
+    st.markdown(
+        '<div class="guide-card">'
+        '<div class="guide-label">Project Guide</div>'
+        '<div class="guide-name">Mr. Abdul Aziz MD</div>'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+    # Team
+
+    st.markdown(
+        '<div class="team-card">'
+        '<div class="team-heading">👥 Team Members</div>'
+        '<div class="team-lead">'
+        '⭐ S Nagasindhu — Team Lead'
+        '</div>'
+        '<div class="team-member">'
+        'S Bhavya Sri — Team Member'
+        '</div>'
+        '<div class="team-member">'
+        'S Manasa — Team Member'
+        '</div>'
+        '<div class="team-member">'
+        'S Anusha — Team Member'
+        '</div>'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+    # Project title
+
+    st.markdown(
+        '<div class="project-heading">'
+        '🚨 WeaponGuard AI'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+    # Description heading
+
+    st.markdown(
+        '<div class="description-heading">'
+        'Description'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+    # Description text
+
+    st.markdown(
+        '<div class="description-text">'
+        'WeaponGuard AI is an intelligent weapon detection system '
+        'designed to identify weapons from CCTV images and video '
+        'footage using Artificial Intelligence and YOLO-based object '
+        'detection. The system analyzes uploaded media, detects '
+        'weapons, highlights the detected objects with bounding boxes, '
+        'and provides an alert when a weapon is identified. By '
+        'supporting both image and video input, the system improves '
+        'security monitoring and helps users respond quickly to '
+        'potentially dangerous situations.'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Next button
 
     if st.button(
         "➡️ NEXT",
@@ -458,13 +404,10 @@ def home_page():
 # IMAGE DETECTION
 # =========================================================
 
-def image_detection(
-    model,
-    confidence_threshold
-):
+def image_detection(model, confidence_threshold):
 
     st.subheader(
-        "📷 Image Detection"
+        "📷 Image Weapon Detection"
     )
 
     uploaded_image = st.file_uploader(
@@ -480,7 +423,6 @@ def image_detection(
     )
 
     if uploaded_image is None:
-
         return
 
     image = Image.open(
@@ -492,13 +434,13 @@ def image_detection(
     )
 
     st.success(
-        "✅ Image uploaded successfully"
+        "✅ Image uploaded successfully!"
     )
 
     if st.button(
         "🔍 Detect Weapon",
         use_container_width=True,
-        key="image_detect_button"
+        key="detect_image"
     ):
 
         image_bgr = cv2.cvtColor(
@@ -506,7 +448,6 @@ def image_detection(
             cv2.COLOR_RGB2BGR
         )
 
-        # Run model with low threshold first
         results = model(
             image_bgr,
             conf=0.10,
@@ -516,11 +457,10 @@ def image_detection(
         output_image = image_bgr.copy()
 
         weapon_count = 0
-        total_objects = 0
 
-        # =================================================
+        # ---------------------------------------------
         # DETECTION
-        # =================================================
+        # ---------------------------------------------
 
         for result in results:
 
@@ -537,18 +477,12 @@ def image_detection(
                     box.cls[0]
                 )
 
-                class_name = model.names[
-                    class_id
-                ]
-
-                total_objects += 1
-
-                # -----------------------------------------
-                # WEAPON CHECK
-                # -----------------------------------------
+                class_name = str(
+                    model.names[class_id]
+                )
 
                 if (
-                    is_weapon_class(class_name)
+                    class_name.lower() == "weapon"
                     and confidence >= confidence_threshold
                 ):
 
@@ -559,7 +493,6 @@ def image_detection(
                         box.xyxy[0]
                     )
 
-                    # Bounding box
                     cv2.rectangle(
                         output_image,
                         (x1, y1),
@@ -568,43 +501,33 @@ def image_detection(
                         3
                     )
 
-                    # Label
-                    label = (
-                        f"WEAPON "
-                        f"{confidence:.2f}"
-                    )
-
                     cv2.putText(
                         output_image,
-                        label,
-                        (
-                            x1,
-                            max(y1 - 10, 30)
-                        ),
+                        f"WEAPON {confidence:.2f}",
+                        (x1, max(y1 - 10, 30)),
                         cv2.FONT_HERSHEY_SIMPLEX,
-                        0.75,
+                        0.7,
                         (0, 0, 255),
                         2
                     )
-
-        # =================================================
-        # DISPLAY
-        # =================================================
 
         output_rgb = cv2.cvtColor(
             output_image,
             cv2.COLOR_BGR2RGB
         )
 
-        col1, col2 = st.columns(
-            2,
-            gap="large"
-        )
+        # ---------------------------------------------
+        # SIDE BY SIDE
+        # ---------------------------------------------
+
+        col1, col2 = st.columns(2)
 
         with col1:
 
             st.markdown(
-                '<div class="video-heading">📥 Input Image</div>',
+                '<div class="video-heading">'
+                '📥 Input Image'
+                '</div>',
                 unsafe_allow_html=True
             )
 
@@ -616,7 +539,9 @@ def image_detection(
         with col2:
 
             st.markdown(
-                '<div class="video-heading">📤 Detected Image</div>',
+                '<div class="video-heading">'
+                '📤 Output Image'
+                '</div>',
                 unsafe_allow_html=True
             )
 
@@ -625,145 +550,43 @@ def image_detection(
                 use_container_width=True
             )
 
-        # =================================================
-        # SAVE LOG
-        # =================================================
-
-        save_detection_data(
-            "image",
-            weapon_count,
-            total_objects
-        )
-
-        # =================================================
+        # ---------------------------------------------
         # RESULT
-        # =================================================
-
-        st.markdown("---")
+        # ---------------------------------------------
 
         if weapon_count > 0:
 
             st.markdown(
-                f"""
-                <div class="detection-box danger">
-                    🚨 {weapon_count} WEAPON(S) DETECTED
-                </div>
-                """,
+                f'<div class="detection-box danger">'
+                f'🚨 {weapon_count} WEAPON(S) DETECTED'
+                f'</div>',
                 unsafe_allow_html=True
             )
 
-            # Image alert
-            show_alert_sound()
+            play_alert()
 
         else:
 
             st.markdown(
-                """
-                <div class="detection-box safe">
-                    ✅ NO WEAPON DETECTED
-                </div>
-                """,
+                '<div class="detection-box safe">'
+                '✅ NO WEAPON DETECTED'
+                '</div>',
                 unsafe_allow_html=True
             )
-
-        # =================================================
-        # DOWNLOAD
-        # =================================================
-
-        output_pil = Image.fromarray(
-            output_rgb
-        )
-
-        output_bytes = tempfile.NamedTemporaryFile(
-            delete=False,
-            suffix=".png"
-        )
-
-        output_pil.save(
-            output_bytes.name
-        )
-
-        output_bytes.close()
-
-        with open(
-            output_bytes.name,
-            "rb"
-        ) as file:
-
-            st.download_button(
-                label="⬇️ Download Detected Image",
-                data=file.read(),
-                file_name="weapon_detection_output.png",
-                mime="image/png",
-                use_container_width=True
-            )
-
-
-# =========================================================
-# CONVERT VIDEO TO PLAYABLE MP4
-# =========================================================
-
-def convert_to_playable_mp4(
-    input_path,
-    output_path
-):
-
-    ffmpeg_path = shutil.which("ffmpeg")
-
-    if ffmpeg_path is None:
-
-        return False
-
-    try:
-
-        command = [
-            ffmpeg_path,
-            "-y",
-            "-i",
-            input_path,
-            "-vcodec",
-            "libx264",
-            "-pix_fmt",
-            "yuv420p",
-            "-acodec",
-            "aac",
-            "-movflags",
-            "+faststart",
-            output_path
-        ]
-
-        result = subprocess.run(
-            command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-
-        return (
-            result.returncode == 0
-            and os.path.exists(output_path)
-        )
-
-    except Exception:
-
-        return False
 
 
 # =========================================================
 # VIDEO DETECTION
 # =========================================================
 
-def video_detection(
-    model,
-    confidence_threshold,
-    required_frames
-):
+def video_detection(model, confidence_threshold, required_frames):
 
     st.subheader(
-        "🎥 CCTV Video Detection"
+        "🎥 CCTV Video Weapon Detection"
     )
 
     uploaded_video = st.file_uploader(
-        "Upload CCTV video",
+        "Upload CCTV Video",
         type=[
             "mp4",
             "avi",
@@ -774,12 +597,15 @@ def video_detection(
     )
 
     if uploaded_video is None:
-
         return
 
-    # =====================================================
+    st.success(
+        "✅ Video uploaded successfully!"
+    )
+
+    # -----------------------------------------------------
     # SAVE INPUT VIDEO
-    # =====================================================
+    # -----------------------------------------------------
 
     input_file = tempfile.NamedTemporaryFile(
         delete=False,
@@ -787,49 +613,49 @@ def video_detection(
     )
 
     input_file.write(
-        uploaded_video.read()
+        uploaded_video.getbuffer()
     )
 
     input_file.close()
 
     input_video_path = input_file.name
 
-    # =====================================================
-    # SHOW INPUT VIDEO
-    # =====================================================
+    # -----------------------------------------------------
+    # SHOW ORIGINAL INPUT VIDEO
+    # -----------------------------------------------------
 
     st.markdown(
-        '<div class="video-heading">📥 Input CCTV Video</div>',
+        '<div class="video-heading">'
+        '📥 Input CCTV Video'
+        '</div>',
         unsafe_allow_html=True
     )
 
-    # Read uploaded bytes again
-    uploaded_video.seek(0)
-
-    original_video_bytes = uploaded_video.read()
+    # Original video playable directly
 
     st.video(
-        original_video_bytes
+        uploaded_video
     )
 
-    # =====================================================
-    # START BUTTON
-    # =====================================================
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # START DETECTION
+    # -----------------------------------------------------
 
     start_detection = st.button(
-        "🔍 Start Weapon Detection",
+        "🔍 START WEAPON DETECTION",
         use_container_width=True,
         type="primary",
-        key="video_detect_button"
+        key="start_video_detection"
     )
 
     if not start_detection:
-
         return
 
-    # =====================================================
-    # VIDEO CAPTURE
-    # =====================================================
+    # -----------------------------------------------------
+    # OPEN VIDEO
+    # -----------------------------------------------------
 
     cap = cv2.VideoCapture(
         input_video_path
@@ -838,7 +664,7 @@ def video_detection(
     if not cap.isOpened():
 
         st.error(
-            "❌ Could not open uploaded video."
+            "❌ Unable to open video."
         )
 
         return
@@ -868,61 +694,57 @@ def video_detection(
         )
     )
 
-    # =====================================================
+    # -----------------------------------------------------
     # TEMP OUTPUT
-    # =====================================================
+    # -----------------------------------------------------
 
-    raw_output_file = tempfile.NamedTemporaryFile(
+    output_file = tempfile.NamedTemporaryFile(
         delete=False,
-        suffix=".avi"
+        suffix=".mp4"
     )
 
-    raw_output_path = raw_output_file.name
+    output_video_path = output_file.name
 
-    raw_output_file.close()
+    output_file.close()
+
+    # -----------------------------------------------------
+    # VIDEO WRITER
+    # -----------------------------------------------------
 
     fourcc = cv2.VideoWriter_fourcc(
-        *"XVID"
+        *"mp4v"
     )
 
     out = cv2.VideoWriter(
-        raw_output_path,
+        output_video_path,
         fourcc,
         fps,
         (width, height)
     )
 
-    # =====================================================
-    # TRACKING VARIABLES
-    # =====================================================
+    # -----------------------------------------------------
+    # VARIABLES
+    # -----------------------------------------------------
 
     frame_number = 0
 
-    consecutive_weapon_frames = {}
+    weapon_seen_frames = 0
 
-    last_boxes = {}
+    weapon_detected = False
 
-    confirmed_detections = 0
+    detection_count = 0
 
-    detection_events = []
+    # -----------------------------------------------------
+    # PROGRESS
+    # -----------------------------------------------------
 
-    weapon_detected_in_video = False
-
-    # =====================================================
-    # UI
-    # =====================================================
-
-    progress_bar = st.progress(
-        0
-    )
+    progress_bar = st.progress(0)
 
     status_text = st.empty()
 
-    preview_placeholder = st.empty()
-
-    # =====================================================
+    # -----------------------------------------------------
     # PROCESS VIDEO
-    # =====================================================
+    # -----------------------------------------------------
 
     while True:
 
@@ -933,11 +755,15 @@ def video_detection(
 
         frame_number += 1
 
-        current_weapons = []
+        current_weapon = False
 
-        # =================================================
+        current_confidence = 0
+
+        current_box = None
+
+        # ---------------------------------------------
         # YOLO
-        # =================================================
+        # ---------------------------------------------
 
         results = model(
             frame,
@@ -945,9 +771,9 @@ def video_detection(
             verbose=False
         )
 
-        # =================================================
-        # FIND WEAPONS
-        # =================================================
+        # ---------------------------------------------
+        # FIND WEAPON
+        # ---------------------------------------------
 
         for result in results:
 
@@ -964,203 +790,82 @@ def video_detection(
                     box.cls[0]
                 )
 
-                class_name = model.names[
-                    class_id
-                ]
+                class_name = str(
+                    model.names[class_id]
+                )
 
                 if (
-                    is_weapon_class(class_name)
+                    class_name.lower() == "weapon"
                     and confidence >= confidence_threshold
                 ):
 
-                    x1, y1, x2, y2 = map(
-                        int,
-                        box.xyxy[0]
-                    )
+                    current_weapon = True
 
-                    current_weapons.append(
-                        {
-                            "box": (
-                                x1,
-                                y1,
-                                x2,
-                                y2
-                            ),
-                            "confidence": confidence
-                        }
-                    )
+                    current_confidence = confidence
 
-        # =================================================
-        # TRACK WEAPONS
-        # =================================================
-
-        confirmed_weapon_boxes = []
-
-        new_last_boxes = {}
-
-        used_previous_ids = set()
-
-        for weapon in current_weapons:
-
-            weapon_box = weapon["box"]
-            weapon_conf = weapon["confidence"]
-
-            best_match_id = None
-            best_match_distance = 150
-
-            for (
-                previous_id,
-                previous_box
-            ) in last_boxes.items():
-
-                if previous_id in used_previous_ids:
-                    continue
-
-                movement = distance(
-                    previous_box,
-                    weapon_box
-                )
-
-                if movement < best_match_distance:
-
-                    best_match_distance = movement
-                    best_match_id = previous_id
-
-            # Existing weapon
-            if best_match_id is not None:
-
-                used_previous_ids.add(
-                    best_match_id
-                )
-
-                consecutive_weapon_frames[
-                    best_match_id
-                ] = (
-                    consecutive_weapon_frames.get(
-                        best_match_id,
-                        0
-                    ) + 1
-                )
-
-                new_last_boxes[
-                    best_match_id
-                ] = weapon_box
-
-                if (
-                    consecutive_weapon_frames[
-                        best_match_id
-                    ] >= required_frames
-                ):
-
-                    confirmed_weapon_boxes.append(
-                        {
-                            "box": weapon_box,
-                            "confidence": weapon_conf,
-                            "id": best_match_id
-                        }
-                    )
-
-            # New weapon
-            else:
-
-                new_id = (
-                    max(
-                        consecutive_weapon_frames.keys(),
-                        default=-1
-                    ) + 1
-                )
-
-                consecutive_weapon_frames[
-                    new_id
-                ] = 1
-
-                new_last_boxes[
-                    new_id
-                ] = weapon_box
-
-        last_boxes = new_last_boxes
-
-        # =================================================
-        # DRAW DETECTIONS
-        # =================================================
-
-        if confirmed_weapon_boxes:
-
-            weapon_detected_in_video = True
-
-            confirmed_detections += len(
-                confirmed_weapon_boxes
-            )
-
-            for detection in confirmed_weapon_boxes:
-
-                x1, y1, x2, y2 = detection["box"]
-
-                confidence = detection[
-                    "confidence"
-                ]
-
-                # Bounding box
-                cv2.rectangle(
-                    frame,
-                    (x1, y1),
-                    (x2, y2),
-                    (0, 0, 255),
-                    3
-                )
-
-                # Label
-                label = (
-                    f"WEAPON "
-                    f"{confidence:.2f}"
-                )
-
-                cv2.putText(
-                    frame,
-                    label,
-                    (
-                        x1,
-                        max(y1 - 10, 30)
-                    ),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.75,
-                    (0, 0, 255),
-                    2
-                )
-
-                time_sec = (
-                    frame_number / fps
-                )
-
-                detection_events.append(
-                    {
-                        "time": round(
-                            time_sec,
-                            2
-                        ),
-                        "confidence": round(
-                            confidence,
-                            2
+                    current_box = tuple(
+                        map(
+                            int,
+                            box.xyxy[0]
                         )
-                    }
-                )
+                    )
 
-            # Big warning
+                    break
+
+            if current_weapon:
+                break
+
+        # ---------------------------------------------
+        # CONSECUTIVE DETECTION
+        # ---------------------------------------------
+
+        if current_weapon:
+
+            weapon_seen_frames += 1
+
+        else:
+
+            weapon_seen_frames = 0
+
+        if (
+            weapon_seen_frames >= required_frames
+        ):
+
+            weapon_detected = True
+
+        # ---------------------------------------------
+        # DRAW OUTPUT
+        # ---------------------------------------------
+
+        if current_weapon and current_box:
+
+            x1, y1, x2, y2 = current_box
+
             cv2.rectangle(
                 frame,
-                (10, 10),
-                (width - 10, 75),
+                (x1, y1),
+                (x2, y2),
                 (0, 0, 255),
-                -1
+                3
+            )
+
+            cv2.putText(
+                frame,
+                f"WEAPON {current_confidence:.2f}",
+                (x1, max(y1 - 10, 30)),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.8,
+                (0, 0, 255),
+                2
             )
 
             cv2.putText(
                 frame,
                 "!!! WEAPON DETECTED !!!",
-                (30, 55),
+                (30, 50),
                 cv2.FONT_HERSHEY_SIMPLEX,
-                1.1,
-                (255, 255, 255),
+                1,
+                (0, 0, 255),
                 3
             )
 
@@ -1169,39 +874,22 @@ def video_detection(
             cv2.putText(
                 frame,
                 "No Weapon Detected",
-                (25, 45),
+                (30, 50),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.9,
                 (0, 255, 0),
                 2
             )
 
-        # =================================================
-        # WRITE FRAME
-        # =================================================
+        # ---------------------------------------------
+        # WRITE OUTPUT FRAME
+        # ---------------------------------------------
 
-        out.write(
-            frame
-        )
+        out.write(frame)
 
-        # =================================================
-        # LIVE PREVIEW
-        # =================================================
-
-        preview_rgb = cv2.cvtColor(
-            frame,
-            cv2.COLOR_BGR2RGB
-        )
-
-        preview_placeholder.image(
-            preview_rgb,
-            caption="🔄 Processing CCTV Video...",
-            width=700
-        )
-
-        # =================================================
+        # ---------------------------------------------
         # PROGRESS
-        # =================================================
+        # ---------------------------------------------
 
         if total_frames > 0:
 
@@ -1215,280 +903,142 @@ def video_detection(
             )
 
         status_text.write(
-            f"Processing frame "
+            f"Processing video: "
             f"{frame_number} / "
-            f"{total_frames}"
+            f"{total_frames} frames"
         )
 
-    # =====================================================
+    # -----------------------------------------------------
     # RELEASE
-    # =====================================================
+    # -----------------------------------------------------
 
     cap.release()
 
     out.release()
 
-    progress_bar.progress(
-        1.0
-    )
+    progress_bar.progress(1.0)
 
     status_text.success(
-        "✅ Video processing completed!"
+        "✅ Weapon detection completed!"
     )
 
-    # Remove live preview
-    preview_placeholder.empty()
-
-    # =====================================================
-    # CONVERT TO PLAYABLE MP4
-    # =====================================================
-
-    playable_video_file = tempfile.NamedTemporaryFile(
-        delete=False,
-        suffix=".mp4"
-    )
-
-    playable_video_path = (
-        playable_video_file.name
-    )
-
-    playable_video_file.close()
-
-    converted = convert_to_playable_mp4(
-        raw_output_path,
-        playable_video_path
-    )
-
-    # =====================================================
-    # IF FFMPEG IS NOT AVAILABLE
-    # =====================================================
-
-    if not converted:
-
-        playable_video_path = raw_output_path
-
-    # =====================================================
-    # READ OUTPUT VIDEO
-    # =====================================================
-
-    if os.path.exists(
-        playable_video_path
-    ):
-
-        with open(
-            playable_video_path,
-            "rb"
-        ) as video_file:
-
-            output_video_bytes = (
-                video_file.read()
-            )
-
-    else:
-
-        output_video_bytes = None
-
-    # =====================================================
-    # RESULTS
-    # =====================================================
+    # -----------------------------------------------------
+    # OUTPUT VIDEO
+    # -----------------------------------------------------
 
     st.markdown("---")
 
-    st.subheader(
-        "📊 Detection Results"
+    st.markdown(
+        '<div class="video-heading">'
+        '📤 Output CCTV Video'
+        '</div>',
+        unsafe_allow_html=True
     )
 
-    col1, col2, col3 = st.columns(
-        3
-    )
+    # -----------------------------------------------------
+    # OUTPUT SIDE BY SIDE
+    # -----------------------------------------------------
+
+    col1, col2 = st.columns(2)
 
     with col1:
 
         st.markdown(
-            f"""
-            <div class="info-card">
-                <h3>🎞️ Frames</h3>
-                <h2>{total_frames}</h2>
-            </div>
-            """,
+            '<div class="video-heading">'
+            '📥 Input Video'
+            '</div>',
             unsafe_allow_html=True
+        )
+
+        # Play original uploaded video
+
+        with open(
+            input_video_path,
+            "rb"
+        ) as f:
+
+            input_bytes = f.read()
+
+        st.video(
+            input_bytes
         )
 
     with col2:
 
         st.markdown(
-            f"""
-            <div class="info-card">
-                <h3>🚨 Detections</h3>
-                <h2>{confirmed_detections}</h2>
-            </div>
-            """,
+            '<div class="video-heading">'
+            '📤 Detected Output Video'
+            '</div>',
             unsafe_allow_html=True
         )
 
-    with col3:
+        # Read processed video
 
-        if weapon_detected_in_video:
+        if os.path.exists(
+            output_video_path
+        ):
 
-            st.markdown(
-                """
-                <div class="detection-box danger">
-                    🚨 WEAPON DETECTED
-                </div>
-                """,
-                unsafe_allow_html=True
+            with open(
+                output_video_path,
+                "rb"
+            ) as f:
+
+                output_bytes = f.read()
+
+            st.video(
+                output_bytes
             )
 
-        else:
-
-            st.markdown(
-                """
-                <div class="detection-box safe">
-                    ✅ NO WEAPON DETECTED
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-
-    # =====================================================
-    # SIREN ONLY IF VIDEO HAS WEAPON
-    # =====================================================
-
-    if weapon_detected_in_video:
-
-        st.markdown("---")
-
-        st.warning(
-            "🚨 Weapon detected in the CCTV video. "
-            "Alert sound is enabled below."
-        )
-
-        show_alert_sound()
-
-    # =====================================================
-    # INPUT + OUTPUT VIDEO SIDE BY SIDE
-    # =====================================================
+    # -----------------------------------------------------
+    # DETECTION RESULT
+    # -----------------------------------------------------
 
     st.markdown("---")
 
-    st.subheader(
-        "🎥 CCTV Video Comparison"
-    )
-
-    video_col1, video_col2 = st.columns(
-        2,
-        gap="large"
-    )
-
-    with video_col1:
+    if weapon_detected:
 
         st.markdown(
-            '<div class="video-heading">📥 Original Video</div>',
+            '<div class="detection-box danger">'
+            '🚨 WEAPON DETECTED IN CCTV VIDEO'
+            '</div>',
             unsafe_allow_html=True
         )
 
-        st.video(
-            original_video_bytes
-        )
+        # Alert only after processing confirms weapon
 
-    with video_col2:
+        play_alert()
+
+    else:
 
         st.markdown(
-            '<div class="video-heading">📤 Detected Output Video</div>',
+            '<div class="detection-box safe">'
+            '✅ NO WEAPON DETECTED'
+            '</div>',
             unsafe_allow_html=True
         )
 
-        if output_video_bytes is not None:
+    # -----------------------------------------------------
+    # DOWNLOAD OPTIONAL
+    # -----------------------------------------------------
 
-            st.video(
-                output_video_bytes
-            )
+    if os.path.exists(
+        output_video_path
+    ):
 
-        else:
+        with open(
+            output_video_path,
+            "rb"
+        ) as f:
 
-            st.error(
-                "❌ Output video could not be generated."
-            )
-
-    # =====================================================
-    # DOWNLOAD OUTPUT
-    # =====================================================
-
-    if output_video_bytes is not None:
+            output_bytes = f.read()
 
         st.download_button(
-            label="⬇️ Download Processed Video",
-            data=output_video_bytes,
+            "⬇️ Download Output Video",
+            data=output_bytes,
             file_name="weapon_detection_result.mp4",
             mime="video/mp4",
             use_container_width=True
         )
-
-    # =====================================================
-    # DETECTION EVENTS
-    # =====================================================
-
-    if detection_events:
-
-        st.markdown("---")
-
-        st.subheader(
-            "🚨 Detection Events"
-        )
-
-        # Show unique events approximately
-        displayed_times = set()
-
-        for event in detection_events:
-
-            event_time = event["time"]
-
-            rounded_time = round(
-                event_time,
-                1
-            )
-
-            if rounded_time in displayed_times:
-                continue
-
-            displayed_times.add(
-                rounded_time
-            )
-
-            st.warning(
-                f"⏱️ Time: {event_time} sec | "
-                f"Confidence: {event['confidence']}"
-            )
-
-            if len(displayed_times) >= 20:
-                break
-
-    # =====================================================
-    # SAVE LOG
-    # =====================================================
-
-    save_detection_data(
-        "video",
-        confirmed_detections,
-        total_frames
-    )
-
-    # =====================================================
-    # CLEAN TEMP FILES
-    # =====================================================
-
-    try:
-
-        if os.path.exists(
-            input_video_path
-        ):
-
-            os.remove(
-                input_video_path
-            )
-
-    except Exception:
-        pass
 
 
 # =========================================================
@@ -1497,26 +1047,20 @@ def video_detection(
 
 def detection_page():
 
-    # =====================================================
+    # -----------------------------------------------------
     # SIDEBAR
-    # =====================================================
+    # -----------------------------------------------------
 
     with st.sidebar:
 
         st.markdown(
-            """
-            <div class="sidebar-title">
-                ⚙️ DETECTION SETTINGS
-            </div>
-            """,
+            '<div class="sidebar-heading">'
+            '⚙️ Detection Settings'
+            '</div>',
             unsafe_allow_html=True
         )
 
         st.markdown("---")
-
-        # =================================================
-        # BACK BUTTON
-        # =================================================
 
         if st.button(
             "⬅️ BACK",
@@ -1531,18 +1075,18 @@ def detection_page():
 
         confidence_threshold = st.slider(
             "🎯 Confidence Threshold",
-            min_value=0.10,
-            max_value=1.00,
-            value=CONFIDENCE_THRESHOLD,
-            step=0.05
+            0.10,
+            1.00,
+            CONFIDENCE_THRESHOLD,
+            0.05
         )
 
         required_frames = st.slider(
             "🎞️ Required Consecutive Frames",
-            min_value=1,
-            max_value=15,
-            value=REQUIRED_CONSECUTIVE_FRAMES,
-            step=1
+            1,
+            15,
+            REQUIRED_CONSECUTIVE_FRAMES,
+            1
         )
 
         st.markdown("---")
@@ -1556,99 +1100,69 @@ def detection_page():
         )
 
         st.write(
-            "📹 **Input:** Image / CCTV Video"
+            "📷 **Input:** Image / CCTV Video"
         )
 
-        st.markdown("---")
+    # -----------------------------------------------------
+    # MODEL CHECK
+    # -----------------------------------------------------
 
-        st.markdown(
-            "### 👥 Team"
-        )
-
-        st.write(
-            f"⭐ **{TEAM_LEAD} — Team Lead**"
-        )
-
-        for member in TEAM_MEMBERS:
-
-            st.write(
-                f"• {member} — Team Member"
-            )
-
-    # =====================================================
-    # CHECK MODEL
-    # =====================================================
-
-    if not os.path.exists(
-        MODEL_PATH
-    ):
+    if not os.path.exists(MODEL_PATH):
 
         st.error(
             "❌ best.pt not found!"
         )
 
         st.info(
-            "Please place best.pt in the same "
-            "folder as app.py."
+            "Place best.pt in the same folder "
+            "as app.py."
         )
 
         st.stop()
 
-    # =====================================================
-    # LOAD MODEL
-    # =====================================================
+    # -----------------------------------------------------
+    # MODEL
+    # -----------------------------------------------------
 
     model = load_model()
 
-    # =====================================================
+    # -----------------------------------------------------
     # HEADER
-    # =====================================================
+    # -----------------------------------------------------
 
     st.markdown(
-        """
-        <div class="detection-title">
-            🚨 WeaponGuard AI
-        </div>
-        """,
+        '<div class="project-heading">'
+        '🚨 WeaponGuard AI'
+        '</div>',
         unsafe_allow_html=True
     )
 
     st.markdown(
-        """
-        <div class="detection-subtitle">
-            AI-powered weapon detection using YOLO
-        </div>
-        """,
+        '<div class="description-text">'
+        'AI-powered weapon detection from images and CCTV video.'
+        '</div>',
         unsafe_allow_html=True
     )
 
-    # =====================================================
+    # -----------------------------------------------------
     # TABS
-    # =====================================================
+    # -----------------------------------------------------
 
-    tab1, tab2 = st.tabs(
+    image_tab, video_tab = st.tabs(
         [
             "📷 Image Detection",
             "🎥 Video Detection"
         ]
     )
 
-    # =====================================================
-    # IMAGE TAB
-    # =====================================================
-
-    with tab1:
+    with image_tab:
 
         image_detection(
             model,
             confidence_threshold
         )
 
-    # =====================================================
-    # VIDEO TAB
-    # =====================================================
-
-    with tab2:
+    with video_tab:
 
         video_detection(
             model,
