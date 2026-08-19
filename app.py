@@ -472,19 +472,19 @@ def home_page():
     st.write("")
     st.write("")
 
-
 # =====================================================
-# NEXT BUTTON
-# =====================================================
+    # NEXT BUTTON
+    # =====================================================
 
-if st.button(
-    "➡️ NEXT",
-    key="welcome_next_button",
-    use_container_width=True,
-    type="primary"
-):
-    st.session_state.page = "detection"
-    st.rerun()
+    if st.button(
+        "➡️ NEXT",
+        use_container_width=True,
+        type="primary"
+    ):
+
+        st.session_state.page = "detection"
+
+        st.rerun()
 
 # =========================================================
 # DETECTION PAGE
