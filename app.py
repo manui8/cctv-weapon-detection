@@ -242,78 +242,124 @@ def distance(box1, box2):
 
 def home_page():
 
-    # -----------------------------------------------------
-    # SIDEBAR
-    # -----------------------------------------------------
+    # =====================================================
+    # LEFT SIDEBAR
+    # =====================================================
 
     with st.sidebar:
 
         st.markdown(
-            "## Artificial Intelligence "
-            "Career for Women (AICW)"
+            """
+            <div class="sidebar-title">
+                Artificial Intelligence<br>
+                Career for Women (AICW)
+            </div>
+            """,
+            unsafe_allow_html=True
         )
 
         st.markdown("---")
 
         st.markdown("### 🎓 College")
-
-        st.write(
-            "VSM College of Engineering"
-        )
+        st.write("VSM College of Engineering")
 
         st.markdown("---")
 
-        st.markdown("### 👩‍🏫 Project Guide")
-
-        st.write(
-            "Mr. Abdul Aziz MD"
-        )
+        st.markdown("### 👨‍🏫 Project Guide")
+        st.write("Mr. Abdul Aziz MD")
 
         st.markdown("---")
 
         st.markdown("### 👥 Team Members")
 
-        st.write(
-            "⭐ **S Nagasindhu — Team Lead**"
-        )
-
-        st.write(
-            "• S Bhavyasri — Team Member"
-        )
-
-        st.write(
-            "• S Manasa — Team Member"
-        )
-
-        st.write(
-            "• S Anusha — Team Member"
-        )
+        st.write("⭐ **S Nagasindhu — Team Lead**")
+        st.write("• **S Bhavyasri — Team Member**")
+        st.write("• **S Manasa — Team Member**")
+        st.write("• **S Anusha — Team Member**")
 
         st.markdown("---")
 
-        st.write(
-            "🚨 **AI Based Weapon Detection in CCTV**"
-        )
+        st.write("🚨 **WeaponGuard AI**")
 
 
-    # -----------------------------------------------------
-    # MAIN WELCOME INTERFACE
-    # -----------------------------------------------------
+    # =====================================================
+    # RIGHT SIDE - WELCOME INTERFACE
+    # =====================================================
 
     st.markdown(
-        '<div class="welcome-title">'
-        '🚨 AI Based Weapon Detection in CCTV'
-        '</div>',
+        '<div class="weapon-home">',
+        unsafe_allow_html=True
+    )
+
+    # Main Project Heading
+
+    st.markdown(
+        """
+        <div class="weapon-title">
+            🚨 WeaponGuard AI
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Description Heading
+
+    st.markdown(
+        """
+        <div class="description-heading">
+            Description
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Description Matter
+
+    st.markdown(
+        """
+        <div class="description-text">
+            WeaponGuard AI is an intelligent CCTV weapon detection
+            system designed to improve security through automated
+            weapon identification. The system uses Artificial
+            Intelligence and YOLO-based object detection to analyze
+            uploaded images and CCTV video footage. When a weapon is
+            detected, the system highlights the suspicious object and
+            provides an immediate alert. This helps security personnel
+            identify potential threats quickly, reduce monitoring
+            effort, and support faster response to dangerous
+            situations. The system provides a simple and user-friendly
+            interface for both image and video based weapon detection.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # =====================================================
+    # NEXT BUTTON
+    # =====================================================
+
+    st.markdown(
+        '<div class="next-area">',
+        unsafe_allow_html=True
+    )
+
+    if st.button(
+        "➡️ NEXT",
+        use_container_width=True,
+        type="primary"
+    ):
+        st.session_state.page = "detection"
+        st.rerun()
+
+    st.markdown(
+        "</div>",
         unsafe_allow_html=True
     )
 
     st.markdown(
-        '<div class="college-title">'
-        'VSM College of Engineering'
-        '</div>',
+        "</div>",
         unsafe_allow_html=True
     )
-
 
     # -----------------------------------------------------
     # DESCRIPTION
