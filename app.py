@@ -381,7 +381,7 @@ def convert_video_for_browser(input_path):
 
 
 # =========================================================
-# HOME PAGE
+# HOME / WELCOME PAGE
 # =========================================================
 
 def home_page():
@@ -392,133 +392,99 @@ def home_page():
 
     with st.sidebar:
 
-        st.markdown(
-            """
-            <div class="sidebar-aicw">
-                Artificial Intelligence<br>
-                Career for Women (AICW)
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        st.title("Artificial Intelligence")
+        st.title("Career for Women (AICW)")
+
+        st.divider()
+
+        st.subheader("🎓 College")
+        st.write("VSM College of Engineering")
+
+        st.divider()
+
+        st.subheader("👥 Team Members")
 
         st.markdown(
-            f"""
-            <div class="sidebar-section">
-
-                <div class="sidebar-heading">
-                    🎓 College
-                </div>
-
-                <div class="sidebar-text">
-                    {COLLEGE_NAME}
-                </div>
-
-            </div>
-            """,
-            unsafe_allow_html=True
+            "**⭐ S. Nagasindhu — Team Lead**"
         )
 
-        st.markdown(
-            """
-            <div class="sidebar-section">
-
-                <div class="sidebar-heading">
-                    👥 Team Members
-                </div>
-
-            </div>
-            """,
-            unsafe_allow_html=True
+        st.write(
+            "• S. Bhavyasri — Team Member"
         )
 
-        st.markdown(
-            f"""
-            <div class="sidebar-text">
-
-                <div class="team-lead">
-                    ⭐ {TEAM_LEAD} — Team Lead
-                </div>
-
-                <div>
-                    • {TEAM_MEMBERS[0]} — Team Member
-                </div>
-
-                <div>
-                    • {TEAM_MEMBERS[1]} — Team Member
-                </div>
-
-                <div>
-                    • {TEAM_MEMBERS[2]} — Team Member
-                </div>
-
-            </div>
-            """,
-            unsafe_allow_html=True
+        st.write(
+            "• S. Manasa — Team Member"
         )
 
-        st.markdown(
-            f"""
-            <div class="sidebar-section">
-
-                <div class="sidebar-heading">
-                    👨‍🏫 Project Guide
-                </div>
-
-                <div class="sidebar-text">
-                    {GUIDE_NAME}
-                </div>
-
-            </div>
-            """,
-            unsafe_allow_html=True
+        st.write(
+            "• S. Anusha — Team Member"
         )
+
+        st.divider()
+
+        st.subheader("👨‍🏫 Project Guide")
+        st.write("Mr. Abdul Aziz MD")
 
     # =====================================================
-    # RIGHT SIDE
+    # RIGHT SIDE — MAIN WELCOME CONTENT
     # =====================================================
 
     st.markdown(
+        "<h1 style='text-align:center;'>🚨 WeaponGuard AI</h1>",
+        unsafe_allow_html=True
+    )
+
+    st.write("")
+
+    # Description heading
+    st.markdown(
+        "<h2 style='text-align:center;'>Description</h2>",
+        unsafe_allow_html=True
+    )
+
+    st.write("")
+
+    # Description matter
+    st.markdown(
         """
-        <div class="welcome-title">
-            🚨 WeaponGuard AI
+        <div style="
+            text-align:center;
+            font-size:18px;
+            line-height:1.8;
+            max-width:900px;
+            margin:auto;
+        ">
+        WeaponGuard AI is an intelligent weapon detection system
+        designed to improve security through automated image and
+        CCTV video analysis. The system uses Artificial Intelligence
+        and YOLO-based object detection to identify weapons in
+        uploaded media. When a weapon is detected, the system
+        highlights the detected object and provides an alert sound.
+        By reducing the need for continuous manual monitoring,
+        the solution helps security personnel identify potential
+        threats quickly and respond more effectively.
         </div>
         """,
         unsafe_allow_html=True
     )
 
-    st.markdown(
-        """
-        <div class="description-card">
+    st.write("")
+    st.write("")
+    st.write("")
 
-            <div class="description-heading">
-                Description
-            </div>
+    # =====================================================
+    # NEXT BUTTON
+    # =====================================================
 
-            <div class="description-text">
-                WeaponGuard AI is an intelligent weapon detection
-                system designed to improve security through
-                automated image and CCTV video analysis.
-                The system uses Artificial Intelligence and
-                YOLO-based object detection to identify weapons
-                in uploaded media. When a weapon is detected,
-                the system highlights the detected object and
-                provides an alert sound. By reducing the need
-                for continuous manual monitoring, the solution
-                helps security personnel identify potential
-                threats quickly and respond more effectively.
-            </div>
+    if st.button(
+        "➡️ NEXT",
+        use_container_width=True,
+        type="primary"
+    ):
 
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+        st.session_state.page = "detection"
 
-    st.markdown(
-        '<div class="welcome-space"></div>',
-        unsafe_allow_html=True
-    )
-
+        st.rerun()
     # =====================================================
     # NEXT BUTTON
     # =====================================================
