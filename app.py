@@ -472,21 +472,6 @@ def home_page():
     st.write("")
     st.write("")
 
-   
-
-   # =====================================================
-# NEXT BUTTON
-# =====================================================
-
-if st.button(
-    "➡️ NEXT",
-    key="welcome_next_button",
-    use_container_width=True,
-    type="primary"
-):
-    st.session_state.page = "detection"
-    st.rerun()
-
 
 # =====================================================
 # NEXT BUTTON
