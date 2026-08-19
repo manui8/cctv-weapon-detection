@@ -1402,7 +1402,7 @@ status_text.success(
     "✅ Video processing completed!"
 )
 
-                preview_placeholder.empty()
+preview_placeholder.empty()
 
                 # -----------------------------------------
                 # SAVE LOG
