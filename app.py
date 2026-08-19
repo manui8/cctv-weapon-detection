@@ -1272,137 +1272,138 @@ def detection_page():
                 out.release()
 
                 # =====================================================
-# MERGE SIREN WITH OUTPUT VIDEO
-# =====================================================
+                # MERGE SIREN WITH OUTPUT VIDEO
+                # =====================================================
 
-final_output_video_path = output_video_path.replace(
-    ".mp4",
-    "_with_siren.mp4"
-)
+                final_output_video_path = output_video_path.replace(
+                    ".mp4",
+                    "_with_siren.mp4"
+                )
 
-try:
+                try:
 
-    if (
-        confirmed_detections > 0
-        and os.path.exists("alert.mp3")
-        and detection_events
-    ):
+                    if (
+                        confirmed_detections > 0
+                        and os.path.exists("alert.mp3")
+                        and detection_events
+                    ):
 
-        # Create delayed siren inputs based on
-        # weapon detection times
+                        # Create delayed siren inputs based on
+                        # weapon detection times
 
-        ffmpeg_inputs = [
-            "-i",
-            output_video_path
-        ]
+                        ffmpeg_inputs = [
+                            "-i",
+                            output_video_path
+                        ]
 
-        filter_parts = []
-        audio_labels = []
+                        filter_parts = []
 
-        for index, event in enumerate(
-            detection_events
-        ):
+                        audio_labels = []
 
-            delay_ms = int(
-                event["time"] * 1000
-            )
+                        for index, event in enumerate(
+                            detection_events
+                        ):
 
-            ffmpeg_inputs.extend(
-                [
-                    "-stream_loop",
-                    "-1",
-                    "-i",
-                    "alert.mp3"
-                ]
-            )
+                            delay_ms = int(
+                                event["time"] * 1000
+                            )
 
-            label = f"siren{index}"
+                            ffmpeg_inputs.extend(
+                                [
+                                    "-stream_loop",
+                                    "-1",
+                                    "-i",
+                                    "alert.mp3"
+                                ]
+                            )
 
-            filter_parts.append(
-                f"[{index + 1}:a]"
-                f"atrim=duration=2,"
-                f"adelay={delay_ms}|{delay_ms}"
-                f"[{label}]"
-            )
+                            label = f"siren{index}"
 
-            audio_labels.append(
-                f"[{label}]"
-            )
+                            filter_parts.append(
+                                f"[{index + 1}:a]"
+                                f"atrim=duration=2,"
+                                f"adelay={delay_ms}|{delay_ms}"
+                                f"[{label}]"
+                            )
 
-        # Mix all siren sounds
+                            audio_labels.append(
+                                f"[{label}]"
+                            )
 
-        filter_complex = ";".join(
-            filter_parts
-        )
+                        # Mix all siren sounds
 
-        filter_complex += (
-            ";"
-            + "".join(audio_labels)
-            + f"amix=inputs={len(audio_labels)}:"
-              "duration=longest:"
-              "dropout_transition=0"
-              "[siren]"
-        )
+                        filter_complex = ";".join(
+                            filter_parts
+                        )
 
-        # Add original video + siren audio
+                        filter_complex += (
+                            ";"
+                            + "".join(audio_labels)
+                            + f"amix=inputs={len(audio_labels)}:"
+                            "duration=longest:"
+                            "dropout_transition=0"
+                            "[siren]"
+                        )
 
-        command = [
-            "ffmpeg",
-            "-y"
-        ]
+                        # Add original video + siren audio
 
-        command.extend(
-            ffmpeg_inputs
-        )
+                        command = [
+                            "ffmpeg",
+                            "-y"
+                        ]
 
-        command.extend(
-            [
-                "-filter_complex",
-                filter_complex,
-                "-map",
-                "0:v:0",
-                "-map",
-                "[siren]",
-                "-c:v",
-                "copy",
-                "-c:a",
-                "aac",
-                "-shortest",
-                final_output_video_path
-            ]
-        )
+                        command.extend(
+                            ffmpeg_inputs
+                        )
 
-        subprocess.run(
-            command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=True
-        )
+                        command.extend(
+                            [
+                                "-filter_complex",
+                                filter_complex,
+                                "-map",
+                                "0:v:0",
+                                "-map",
+                                "[siren]",
+                                "-c:v",
+                                "copy",
+                                "-c:a",
+                                "aac",
+                                "-shortest",
+                                final_output_video_path
+                            ]
+                        )
 
-        # Use merged video as final output
+                        subprocess.run(
+                            command,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE,
+                            check=True
+                        )
 
-        output_video_path = (
-            final_output_video_path
-        )
+                        # Use merged video as final output
 
-        st.success(
-            "🔊 Weapon detection siren "
-            "has been added to the output video."
-        )
+                        output_video_path = (
+                            final_output_video_path
+                        )
 
-except Exception as e:
+                        st.success(
+                            "🔊 Weapon detection siren "
+                            "has been added to the output video."
+                        )
 
-    st.warning(
-        f"Could not merge siren audio: {e}"
-    )
+                except Exception as e:
 
-progress_bar.progress(1.0)
+                    st.warning(
+                        f"Could not merge siren audio: {e}"
+                    )
 
-status_text.success(
-    "✅ Video processing completed!"
-)
+                progress_bar.progress(1.0)
 
-preview_placeholder.empty()
+                status_text.success(
+                    "✅ Video processing completed!"
+                )
+
+                preview_placeholder.empty()
 
                 # -----------------------------------------
                 # SAVE LOG
@@ -1487,8 +1488,6 @@ preview_placeholder.empty()
                     st.subheader(
                         "🚨 Detection Events"
                     )
-
-                    # Show unique/limited events
 
                     displayed_events = detection_events[:50]
 
