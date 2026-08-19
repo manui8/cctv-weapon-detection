@@ -1348,39 +1348,38 @@ with col3:
                 # -----------------------------------------
                 # SIREN ONLY WHEN WEAPON DETECTED
                 # -----------------------------------------
+        if confirmed_detections > 0:
 
-                if confirmed_detections > 0:
+                st.markdown(
+                    "### 🔊 Weapon Detection Alert"
+                )
 
-                    st.markdown(
-                        "### 🔊 Weapon Detection Alert"
-                    )
-
-                    play_alert()
+                play_alert()
 
                 # -----------------------------------------
                 # DETECTION EVENTS
                 # -----------------------------------------
 
-                if detection_events:
+        if detection_events:
 
-                    st.markdown("---")
+                st.markdown("---")
 
-                    st.subheader(
-                        "🚨 Detection Events"
-                    )
+                st.subheader(
+                    "🚨 Detection Events"
+                )
 
                     # Show unique/limited events
 
-                    displayed_events = detection_events[:50]
+                displayed_events = detection_events[:50]
 
-                    for event in displayed_events:
+                for event in displayed_events:
 
-                        st.warning(
-                            f"⏱️ Time: "
-                            f"{event['time']} sec  |  "
-                            f"Confidence: "
-                            f"{event['confidence']}"
-                        )
+                    st.warning(
+                        f"⏱️ Time: "
+                        f"{event['time']} sec  |  "
+                        f"Confidence: "
+                        f"{event['confidence']}"
+                    )
 
                 # -----------------------------------------
                 # INPUT / OUTPUT VIDEO SIDE BY SIDE
