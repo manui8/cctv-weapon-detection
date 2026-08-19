@@ -1396,11 +1396,11 @@ except Exception as e:
         f"Could not merge siren audio: {e}"
     )
 
-                progress_bar.progress(1.0)
+progress_bar.progress(1.0)
 
-                status_text.success(
-                    "✅ Video processing completed!"
-                )
+status_text.success(
+    "✅ Video processing completed!"
+)
 
                 preview_placeholder.empty()
 
