@@ -392,8 +392,8 @@ def home_page():
 
     with st.sidebar:
 
-        st.title("Artificial Intelligence")
-        st.title("Career for Women (AICW)")
+        st.title("Artificial Intelligence /n Career for Women (AICW)")
+        
 
         st.divider()
 
